@@ -127,6 +127,7 @@ module Streaming.Prelude (
     , takeWhileM
     , drop
     , dropWhile
+    , dropWhileM
     , concat
     -- , elemIndices
     -- , findIndices
@@ -710,6 +711,21 @@ dropWhile thePred = loop where
       then loop as
       else Step (a :> as)
 {-# INLINABLE dropWhile #-}
+
+
+
+dropWhileM :: Monad m => (a -> m Bool) -> Stream (Of a) m r -> Stream (Of a) m r
+dropWhileM thePred = loop where
+  loop stream = case stream of
+    Return r -> Return r
+    Effect ma -> Effect (fmap loop ma)
+    Step ( a :> as) -> do
+      b <- lift (thePred a)
+      if b
+        then loop as
+        else Step (a :> as) 
+{-# INLINABLE dropWhileM #-}
+
 
 -- ---------------
 -- each
